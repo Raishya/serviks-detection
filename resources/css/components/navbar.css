@@ -1,0 +1,48 @@
+body {
+    padding-top: 56px;
+}
+
+.sidebar {
+    width: 15vw;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    padding: 48px 0 0;
+    /* Height of navbar */
+}
+
+.main-content {
+    margin-left: 15vw;
+    /* Width of sidebar */
+}
+
+.user-info {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1050;
+    color: rgb(7, 7, 7);
+    padding: 10px;
+}
+
+@media (max-width: 767.98px) {
+    .sidebar {
+        display: none;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding-top: 56px;
+        /* Height of navbar */
+    }
+
+    .user-info {
+        display: none;
+    }
+
+    .navbar {
+        display: flex !important;
+    }
+}
