@@ -181,6 +181,11 @@
             <form id="saveForm" action="{{ route('diagnosa.save') }}" method="POST">
                 @csrf
                 <input type="hidden" id="prediction" name="prediction" value="{{ $result ? json_encode($result) : '' }}">
+                <input type="hidden" name="nama" value="{{ $data['nama'] ?? '' }}">
+                <input type="hidden" name="usia" value="{{ $data['usia'] ?? '' }}">
+                <input type="hidden" name="tanggal_pemeriksaan" value="{{ $data['tanggal_pemeriksaan'] ?? '' }}">
+                <input type="hidden" name="jenis_pemeriksaan" value="{{ $data['jenis_pemeriksaan'] ?? '' }}">
+                <input type="hidden" name="image_path" value="{{ $imagePath ?? '' }}">
                 <div class="mb-3">
                     <label for="diagnosa" class="form-label">Kesimpulan:</label>
                     <textarea class="form-control" id="diagnosa" name="diagnosa" rows="3" required></textarea>
@@ -242,6 +247,13 @@
 
         function previewImage(event) {
             var input = event.target;
+            var file = input.files[0];
+            if (file && file.size > 2 * 1024 * 1024) {
+                alert('Ukuran gambar maksimal 2MB. Silakan pilih gambar lain.');
+                input.value = '';
+                document.getElementById('preview').style.display = 'none';
+                return;
+            }
             var reader = new FileReader();
             reader.onload = function() {
                 var preview = document.getElementById('preview');
@@ -249,9 +261,9 @@
                 preview.style.display = 'block';
 
                 // Save image path to session
-                saveImagePath(input.files[0]);
+                saveImagePath(file);
             };
-            reader.readAsDataURL(input.files[0]);
+            reader.readAsDataURL(file);
         }
 
         function saveImagePath(file) {
@@ -267,11 +279,16 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Image path saved:', data.imagePath);
-                    // Optionally update UI or session data as needed
+                    if (data.success) {
+                        // lanjutkan proses
+                    } else {
+                        alert('Upload gambar gagal, silakan coba lagi.');
+                        document.getElementById('preview').style.display = 'none';
+                    }
                 })
                 .catch(error => {
-                    console.error('Error saving image path:', error);
+                    alert('Upload gambar gagal, silakan coba lagi.');
+                    document.getElementById('preview').style.display = 'none';
                 });
         }
 
