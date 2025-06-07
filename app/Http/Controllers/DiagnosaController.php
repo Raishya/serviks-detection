@@ -34,19 +34,43 @@ class DiagnosaController extends Controller
             'prediction' => 'required',
             'canvas_output_path' => 'required|string|max:255',
             'mask_canvas_path' => 'required|string|max:255',
+            'nama' => 'required|string',
+            'usia' => 'required',
+            'tanggal_pemeriksaan' => 'required',
+            'jenis_pemeriksaan' => 'required',
         ]);
 
+        // Debug: log seluruh session dan request
+        Log::info('DEBUG SESSION', $request->session()->all());
+        Log::info('DEBUG REQUEST', $request->all());
+
+        // Ambil data dari session, jika tidak ada ambil dari request
         $data = $request->session()->get('data');
+        if (is_null($data)) {
+            $data = [
+                'nama' => $request->input('nama'),
+                'usia' => $request->input('usia'),
+                'tanggal_pemeriksaan' => $request->input('tanggal_pemeriksaan'),
+                'jenis_pemeriksaan' => $request->input('jenis_pemeriksaan'),
+            ];
+            Log::warning('Data pasien diambil dari request karena session kosong', $data);
+        } else {
+            Log::info('Data pasien diambil dari session', $data);
+        }
         $imagePath = $request->session()->get('imagePath');
+        if (is_null($imagePath)) {
+            $imagePath = $request->input('image_path');
+            Log::warning('imagePath diambil dari request karena session kosong', ['image_path' => $imagePath]);
+        }
         $canvasOutputPath = $request->input('canvas_output_path');
         $maskCanvasPath = $request->input('mask_canvas_path');
 
-        Log::info('Data session saat save', compact('data', 'imagePath', 'canvasOutputPath', 'maskCanvasPath'));
+        Log::info('Data session/request saat save', compact('data', 'imagePath', 'canvasOutputPath', 'maskCanvasPath'));
 
-        if (is_null($data) || is_null($imagePath)) {
-            Log::error('Data sesi hilang', compact('data', 'imagePath', 'canvasOutputPath', 'maskCanvasPath'));
+        if (is_null($imagePath)) {
+            Log::error('Image path hilang', compact('data', 'imagePath', 'canvasOutputPath', 'maskCanvasPath'));
             $this->cleanupStorage([$imagePath, $canvasOutputPath, $maskCanvasPath]);
-            return redirect()->route('diagnosa')->withErrors(['msg' => 'Data sesi hilang. Silakan coba lagi.']);
+            return redirect()->route('diagnosa')->withErrors(['msg' => 'Data sesi gambar hilang. Silakan coba lagi.']);
         }
 
         $result = json_decode($request->prediction, true);
@@ -86,12 +110,15 @@ class DiagnosaController extends Controller
         ]);
 
         if ($request->file('image')) {
-            $imagePath = $request->file('image')->store('images', 'public');
+            $image = $request->file('image');
+            if ($image->getSize() > 2 * 1024 * 1024) {
+                return response()->json(['success' => false, 'error' => 'Ukuran gambar maksimal 2MB.'], 400);
+            }
+            $imagePath = $image->store('images', 'public');
             $request->session()->put('imagePath', $imagePath);
-            return response()->json(['success' => 'Image uploaded successfully', 'imagePath' => $imagePath]);
+            return response()->json(['success' => true, 'imagePath' => $imagePath]);
         }
-
-        return response()->json(['error' => 'Image upload failed'], 400);
+        return response()->json(['success' => false, 'error' => 'Image upload failed'], 400);
     }
 
     public function saveImageFromCamera(Request $request)
@@ -104,11 +131,13 @@ class DiagnosaController extends Controller
             $imageData = $request->image;
             $imageData = str_replace('data:image/png;base64,', '', $imageData);
             $imageData = str_replace(' ', '+', $imageData);
+            $decoded = base64_decode($imageData);
+            if (strlen($decoded) > 2 * 1024 * 1024) {
+                return response()->json(['success' => false, 'error' => 'Ukuran gambar maksimal 2MB.'], 400);
+            }
             $imageName = 'camera_' . time() . '.png';
-            Storage::disk('public')->put('images/' . $imageName, base64_decode($imageData));
-
+            \Storage::disk('public')->put('images/' . $imageName, $decoded);
             $request->session()->put('imagePath', 'images/' . $imageName);
-
             return response()->json(['success' => true, 'imagePath' => 'images/' . $imageName]);
         } catch (\Exception $e) {
             Log::error('Gagal menyimpan gambar dari kamera', ['error' => $e->getMessage()]);

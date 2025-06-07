@@ -7,7 +7,14 @@
     <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <style>
-
+        .sidebar-profile-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 50%;
+            display: block;
+        }
     </style>
 </head>
 
@@ -22,10 +29,12 @@
                     <a href="{{ url('/') }}">{{ config('app.name', 'Laravel') }}</a>
                 </div>
             </div>
-            <div class="sidebar-profile d-flex justify-content-center">
-                <img src="{{ Auth::user()->profile_photo ? asset('storage/' . Auth::user()->profile_photo) : 'https://via.placeholder.com/30' }}"
-                    width="100" height="100" class="rounded-circle me-2  border border-5 border-primary"
-                    alt="Profile Picture">
+            <div class="sidebar-profile d-flex justify-content-center align-items-center" style="height:120px;">
+                <div style="width:100px;height:100px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                    <img src="{{ Auth::user()->profile_photo ? asset('storage/' . Auth::user()->profile_photo) : 'https://via.placeholder.com/100' }}"
+                        class="border border-5 border-primary sidebar-profile-img"
+                        alt="Profile Picture">
+                </div>
             </div>
             <ul class="sidebar-nav">
                 @auth
