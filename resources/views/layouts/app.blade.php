@@ -81,7 +81,7 @@
                                     <a href="{{ route('diagnosa.arsip') }}" class="sidebar-link">Data Pasien</a>
                                 </li>
                                 <li class="sidebar-item">
-                                    <a href="{{ route('kolposkop') }}" class="sidebar-link"></a>
+                                    <a href="{{ route('kolposkop') }}" class="sidebar-link">Kamera Cerviscope</a>
                                 </li>
                             </ul>
                         </li>
